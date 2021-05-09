@@ -32,6 +32,7 @@
 #include <linux/pinctrl/consumer.h>
 #include <video/mipi_display.h>
 #include <media/v4l2-subdev.h>
+#include <linux/devfreq_boost.h>
 
 #include "decon.h"
 #include "dsim.h"
@@ -1518,6 +1519,11 @@ static int decon_set_win_config(struct decon_device *decon,
 	ret = decon_prepare_win_config(decon, win_data, regs);
 	if (ret)
 		goto err_prepare;
+
+	if (win_data->fence >= 0) {
+		devfreq_boost_kick(DEVFREQ_EXYNOS_MIF);
+		decon_install_fence(fence, win_data->fence);
+	}
 
 	decon_hiber_block(decon);
 	if (regs->num_of_window) {
